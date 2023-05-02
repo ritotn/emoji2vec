@@ -1,4 +1,5 @@
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior()
 import numpy as np
 import time
 from sklearn.metrics import classification_report
@@ -25,8 +26,8 @@ class TraceHook(object):
         raise NotImplementedError
 
     def update_summary(self, sess, current_step, title, value):
-        cur_summary = tf.scalar_summary(title, value)
-        merged_summary_op = tf.merge_summary([cur_summary])  # if you are using some summaries, merge them
+        cur_summary = tf.summary.scalar(title, value)
+        merged_summary_op = tf.summary.merge([cur_summary])  # if you are using some summaries, merge them
         summary_str = sess.run(merged_summary_op)
         self.summary_writer.add_summary(summary_str, current_step)
 

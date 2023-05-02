@@ -8,7 +8,8 @@
 # External dependencies
 import os
 
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior()
 from tensorflow.python.framework import ops
 import pickle as pk
 
@@ -101,7 +102,7 @@ def train_save_evaluate(params, kb, train_set, dev_set, ind2emoji, embeddings_ar
 
         else:
             # For visualizing using tensorboard
-            summary_writer = tf.train.SummaryWriter(model_folder + '/board', graph=sess.graph)
+            summary_writer = tf.summary.FileWriter(model_folder + '/board', graph=sess.graph)
 
             # Keep track of how the model is training
             hooks = [
