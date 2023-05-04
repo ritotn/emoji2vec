@@ -55,7 +55,7 @@ def generate_embeddings(ind2phr, kb, embeddings_file, word2vec_file, word2vec_di
     embeddings_array = np.zeros(shape=[len(ind2phr), 300], dtype=np.float32)
     with torch.no_grad():
         for ind, phr in ind2phr.items():
-            embeddings_array[ind] = phrase_vector_sums[phr]
+            embeddings_array[ind] = phrase_vector_sums[phr][0]
 
     return embeddings_array
 

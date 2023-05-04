@@ -162,14 +162,14 @@ def pad(original_indices_list: list, pad_index: int, vocab2indx, maximum_length=
 def convert_X(examples, vocab2indx, new_pad_entry):
     MAXIMUM_LENGTH = 300
     
-    X_list = []
-    for one_train_example in examples: 
-        one_train_indices = create_word_indices(one_train_example, vocab2indx)
-        one_train_indices = truncate(one_train_indices, maximum_length=MAXIMUM_LENGTH)
-        one_train_indices = pad(one_train_indices, new_pad_entry, vocab2indx, maximum_length=MAXIMUM_LENGTH)
-        X_list.append(one_train_indices)
+    #X_list = []
+    one_train_example = examples
+    one_train_indices = create_word_indices(one_train_example, vocab2indx)
+    one_train_indices = truncate(one_train_indices, maximum_length=MAXIMUM_LENGTH)
+    one_train_indices = pad(one_train_indices, new_pad_entry, vocab2indx, maximum_length=MAXIMUM_LENGTH)
+    #X_list.append(one_train_indices)
         
-    X = torch.FloatTensor(X_list)
+    X = torch.LongTensor(one_train_indices)
     return X
 
 
@@ -215,10 +215,10 @@ class Phrase2VecRNN(nn.Module):
         embed_array_w_oov_pad = add_the_embedding(embed_array_w_oov, vocab2indx)
         
         vecs = torch.FloatTensor(embed_array_w_oov_pad)
-        self.embeddings = nn.Embedding.from_pretrained(vecs, freeze=True)
         
+        self.embeddings = nn.Embedding.from_pretrained(vecs, freeze=True)
         self.rnn = nn.RNN(input_size=dim, hidden_size=300, num_layers=1)   
-        self.linear = nn.Linear(hidden_dim1, 300)
+        self.linear = nn.Linear(hidden_dim1, 1)
 
 
     def __getitem__(self, item):
@@ -236,10 +236,11 @@ class Phrase2VecRNN(nn.Module):
 
         X_train = convert_X(tokens, self.vocab2indx, new_pad_entry)
 
-        out, hidden = self.rnn(X_train)
+        out = self.embeddings(X_train)
+        out, hidden = self.rnn(out)
         out = self.linear(out)
+        #print(out.shape)
 
-        print(out.shape)
         return out
 
     def from_emoji(self, emoji_vec, top_n=10):
