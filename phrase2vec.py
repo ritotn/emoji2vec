@@ -13,6 +13,9 @@ import sklearn
 from sklearn import linear_model
 import matplotlib.pyplot as plt
 
+import torch
+import torch.nn as nn
+
 # Authorship
 __author__ = "Ben Eisner, Tim Rocktaschel"
 __email__ = "beisner@princeton.edu"
@@ -100,6 +103,7 @@ class Phrase2Vec:
 
 
 # CODE FROM HW5
+
 def add_the_embedding(embed_array, vocab2indx, embedding_dim=300): 
     """
     Adds "the" embedding to the embed_array matrix
@@ -133,7 +137,7 @@ def create_word_indices(tokens: List[str], vocab2indx: dict) -> List[int]:
             result.append(vocab2indx["<OOV>"])
     return result
 
-def truncate(original_indices_list: list, maximum_length=100) -> list: 
+def truncate(original_indices_list: list, maximum_length=300) -> list: 
     """
     Truncates the original_indices_list to the maximum_length
     """
@@ -142,7 +146,7 @@ def truncate(original_indices_list: list, maximum_length=100) -> list:
     return original_indices_list[0:maximum_length]
     # CODE END 
 
-def pad(original_indices_list: list, pad_index: int, maximum_length=100) -> list: 
+def pad(original_indices_list: list, pad_index: int, vocab2indx, maximum_length=300) -> list: 
     """
     Given original_indices_list, concatenates the pad_index enough times 
     to make the list to maximum_length. 
@@ -155,21 +159,21 @@ def pad(original_indices_list: list, pad_index: int, maximum_length=100) -> list
             original_indices_list.append(vocab2indx["<PAD>"])
     return original_indices_list
 
-def convert_X(examples):
-    MAXIMUM_LENGTH = 25
+def convert_X(examples, vocab2indx, new_pad_entry):
+    MAXIMUM_LENGTH = 300
     
     X_list = []
     for one_train_example in examples: 
         one_train_indices = create_word_indices(one_train_example, vocab2indx)
         one_train_indices = truncate(one_train_indices, maximum_length=MAXIMUM_LENGTH)
-        one_train_indices = pad(one_train_indices, new_pad_entry, maximum_length=MAXIMUM_LENGTH)
+        one_train_indices = pad(one_train_indices, new_pad_entry, vocab2indx, maximum_length=MAXIMUM_LENGTH)
         X_list.append(one_train_indices)
         
-    X = torch.LongTensor(X_list)
+    X = torch.FloatTensor(X_list)
     return X
 
 
-class Phrase2VecRNN:
+class Phrase2VecRNN(nn.Module):
     def __init__(self, dim, w2v_path, e2v_path=None, hidden_dim1 = 300, hidden_dim2 = 300):
         """Constructor for the Phrase2Vec model
 
@@ -178,24 +182,24 @@ class Phrase2VecRNN:
             w2v: Gensim object for word2vec
             e2v: Gensim object for emoji2vec
         """
+        super().__init__()
         if not os.path.exists(w2v_path):
             print(str.format('{} not found. Either provide a different path, or download binary from '
                                 'https://code.google.com/archive/p/word2vec/ and unzip', w2v_path))
 
-        self.wordVecModel = gs.KeyedVectors.load_word2vec_format(w2v_path, binary=True)
+        wordVecModel = gs.KeyedVectors.load_word2vec_format(w2v_path, binary=True)
 
         if e2v_path is not None:
             self.emojiVecModel = gs.KeyedVectors.load_word2vec_format(e2v_path, binary=True)
         else:
             self.emojiVecModel = dict()
 
-        embeddings = self.wordVecModel
-        vocab2indx = dict(embeddings.key_to_index)
-        idx2vocab = list(embeddings.index_to_key)
-        embed_array = embeddings.vectors
+        vocab2indx = dict(wordVecModel.key_to_index)
+        idx2vocab = list(wordVecModel.index_to_key)
+        embed_array = wordVecModel.vectors
         
         # add <OOV> symbol
-        new_oov_entry = len(embeddings)
+        new_oov_entry = len(wordVecModel)
         idx2vocab += ["<OOV>"]
         vocab2indx["<OOV>"] = new_oov_entry
         embed_array_w_oov = add_the_embedding(embed_array, vocab2indx)
@@ -204,24 +208,18 @@ class Phrase2VecRNN:
         new_pad_entry = len(idx2vocab)
         idx2vocab += ["<PAD>"]
         vocab2indx["<PAD>"] = new_pad_entry
+
+        self.vocab2indx = vocab2indx
+        self.idx2vocab = idx2vocab
+
         embed_array_w_oov_pad = add_the_embedding(embed_array_w_oov, vocab2indx)
-
-        self.dimension = dim
-        leaky_relu_negative_slope = 0.01
-        dropout_probability = 0.1
-
-        self.dropout = nn.Dropout(p=dropout_probability)
-        self.hidden_dim1 = hidden_dim1
         
-        vecs = torch.FloatTensor(self.wordVecModel)
+        vecs = torch.FloatTensor(embed_array_w_oov_pad)
         self.embeddings = nn.Embedding.from_pretrained(vecs, freeze=True)
         
-        self.model = nn.Sequential(
-            nn.Linear(dim, hidden_dim1),
-            nn.LeakyReLU(leaky_relu_negative_slope),
-            nn.Linear(hidden_dim1, hidden_dim2),
-            nn.LeakyReLU(leaky_relu_negative_slope),
-        )
+        self.rnn = nn.RNN(input_size=dim, hidden_size=300, num_layers=1)   
+        self.linear = nn.Linear(hidden_dim1, 300)
+
 
     def __getitem__(self, item):
         """Get the vector sum of all tokens in a phrase
@@ -232,13 +230,16 @@ class Phrase2VecRNN:
         Returns:
             phr_sum: Bag-of-words sum of the tokens in the phrase supplied
         """
-        tokens = item.split(' ')
-        X_train = convert_X(tokens)
 
-        drop_1 = self.dropout(X)
-        a = torch.mean(drop_1, 1)
-        out = self.model(a)
-        print(out)
+        new_pad_entry = len(self.idx2vocab)
+        tokens = item.split(' ')
+
+        X_train = convert_X(tokens, self.vocab2indx, new_pad_entry)
+
+        out, hidden = self.rnn(X_train)
+        out = self.linear(out)
+
+        print(out.shape)
         return out
 
     def from_emoji(self, emoji_vec, top_n=10):

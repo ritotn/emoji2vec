@@ -3,6 +3,7 @@
 # External dependencies
 import pickle as pk
 from sklearn import metrics
+import torch
 
 import numpy as np
 import os.path
@@ -52,8 +53,9 @@ def generate_embeddings(ind2phr, kb, embeddings_file, word2vec_file, word2vec_di
 
     # build the embeddings array, for lookup later
     embeddings_array = np.zeros(shape=[len(ind2phr), 300], dtype=np.float32)
-    for ind, phr in ind2phr.items():
-        embeddings_array[ind] = phrase_vector_sums[phr]
+    with torch.no_grad():
+        for ind, phr in ind2phr.items():
+            embeddings_array[ind] = phrase_vector_sums[phr]
 
     return embeddings_array
 
