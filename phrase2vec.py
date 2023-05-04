@@ -153,24 +153,24 @@ def pad(original_indices_list: list, pad_index: int, vocab2indx, maximum_length=
     """
     # TODO: implement your solution here 
     # CODE START
-    return original_indices_list + [pad_index for i in range(maximum_length - len(original_indices_list))]
+    if len(original_indices_list) < maximum_length:
+        num_pad = maximum_length - len(original_indices_list)
+        for i in range(0, num_pad):
+            original_indices_list.append(vocab2indx["<PAD>"])
+    return original_indices_list
 
-def convert_X(examples, vocab2indx, new_pad_entry):
+def convert_X(desc, vocab2indx, new_pad_entry):
     MAXIMUM_LENGTH = 300
     
-    #X_list = []
-    one_train_example = examples
-    one_train_indices = create_word_indices(one_train_example, vocab2indx)
-    one_train_indices = truncate(one_train_indices, maximum_length=MAXIMUM_LENGTH)
-    one_train_indices = pad(one_train_indices, new_pad_entry, vocab2indx, maximum_length=MAXIMUM_LENGTH)
-    #X_list.append(one_train_indices)
+    desc_indices = create_word_indices(desc, vocab2indx)
+    desc_indices = truncate(desc_indices, maximum_length=MAXIMUM_LENGTH)
+    desc_indices = pad(desc_indices, new_pad_entry, vocab2indx, maximum_length=MAXIMUM_LENGTH)
         
-    X = torch.LongTensor(one_train_indices)
+    X = torch.LongTensor(desc_indices)
     return X
 
-
 class Phrase2VecRNN(nn.Module):
-    def __init__(self, dim, w2v_path, e2v_path=None, hidden_dim1 = 300, hidden_dim2 = 300):
+    def __init__(self, dim, w2v_path, e2v_path=None, hidden_dim=300, num_layers=1, dropout_prob=0.1):
         """Constructor for the Phrase2Vec model
 
         Args:
@@ -207,39 +207,44 @@ class Phrase2VecRNN(nn.Module):
 
         self.vocab2indx = vocab2indx
         self.idx2vocab = idx2vocab
+        self.hidden_dim = hidden_dim
+        self.num_layers = num_layers
 
         embed_array_w_oov_pad = add_the_embedding(embed_array_w_oov, vocab2indx)
-        
         vecs = torch.FloatTensor(embed_array_w_oov_pad)
-        
-        self.embeddings = nn.Embedding.from_pretrained(vecs, freeze=True)
-        self.rnn = nn.RNN(input_size=dim, hidden_size=300, num_layers=1)  
-        self.dropout = nn.Dropout(0.001) 
-        self.linear = nn.Linear(hidden_dim1, 300)
 
+        self.embeddings = nn.Embedding.from_pretrained(vecs, freeze=False)
+        self.dropout = nn.Dropout(dropout_prob) 
+        self.linear = nn.Linear(hidden_dim, 300)
 
-    def __getitem__(self, item):
-        """Get the vector sum of all tokens in a phrase
+        self.rnn = nn.RNN(input_size=dim, hidden_size=300, num_layers=num_layers)  
 
-        Args:
-            item: Phrase to be converted into a vector sum
+    def init_hidden(self, batch_size):
+        # This method generates the first hidden state of zeros which we'll use in the forward pass
+        # We'll send the tensor holding the hidden state to the device we specified earlier as well
+        hidden = torch.zeros(self.num_layers, batch_size)
+        return hidden
 
-        Returns:
-            phr_sum: Bag-of-words sum of the tokens in the phrase supplied
-        """
+    def forward(self, x):
+        batch_size = x.size(0)
 
-        new_pad_entry = len(self.idx2vocab)
-        tokens = item.split(' ')
-
-        X_train = convert_X(tokens, self.vocab2indx, new_pad_entry)
-
-        out = self.embeddings(X_train)
-        out, _ = self.rnn(out)
+        hidden = self.init_hidden(batch_size)
+        embed = self.embeddings(x)
+        out, hidden = self.rnn(embed, hidden)
         out = self.dropout(out)
         out = self.linear(out)
-        # print(out.shape)
+
+        return out, hidden
+
+    def __getitem__(self, item):
+        new_pad_entry = len(self.idx2vocab)
+        tokens = item.split(' ')
+        X = convert_X(tokens, self.vocab2indx, new_pad_entry)
+
+        out, hidden = self.forward(X)
 
         return out
+        
 
     def from_emoji(self, emoji_vec, top_n=10):
         """Get the top n closest tokens for a supplied emoji vector
