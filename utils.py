@@ -11,12 +11,12 @@ from gensim import matutils
 from naga.shared.kb import KB
 
 # Internal dependencies
-from phrase2vec import Phrase2Vec
+from phrase2vec import Phrase2Vec, Phrase2VecRNN
 
 # Authorship
 __author__ = "Ben Eisner, Tim Rocktaschel"
 __email__ = "beisner@princeton.edu"
-
+    
 
 def generate_embeddings(ind2phr, kb, embeddings_file, word2vec_file, word2vec_dim=300):
     """Generate a numpy array of phrase embeddings for all phrases in the knowledge base.
@@ -35,11 +35,11 @@ def generate_embeddings(ind2phr, kb, embeddings_file, word2vec_file, word2vec_di
 
     """
     phrase_vector_sums = dict()
-
     # get the complete word vectors from the second argument
     if not (os.path.isfile(embeddings_file)):
         print('reading embedding data from: ' + word2vec_file)
-        phrase_vec_model = Phrase2Vec.from_word2vec_paths(word2vec_dim, w2v_path=word2vec_file)
+        #phrase_vec_model = Phrase2Vec.from_word2vec_paths(word2vec_dim, w2v_path=word2vec_file)
+        phrase_vec_model = Phrase2VecRNN(word2vec_dim, w2v_path=word2vec_file)
 
         print('generating vector subset')
         for phrase in kb.get_vocab(1):
@@ -85,9 +85,9 @@ def build_kb(data_folder):
     # KB indices to emoji
     ind_to_emoj = dict()
 
-    __read_data(data_folder + 'train.txt', base, ind_to_phr, ind_to_emoj, 'train')
-    __read_data(data_folder + 'dev.txt', base, ind_to_phr, ind_to_emoj, 'dev')
-    __read_data(data_folder + 'test.txt', base, ind_to_phr, ind_to_emoj, 'test')
+    __read_data(data_folder + '/' + 'train.txt', base, ind_to_phr, ind_to_emoj, 'train')
+    __read_data(data_folder + '/' + 'dev.txt', base, ind_to_phr, ind_to_emoj, 'dev')
+    __read_data(data_folder + '/' + 'test.txt', base, ind_to_phr, ind_to_emoj, 'test')
 
     return base, ind_to_phr, ind_to_emoj
 
