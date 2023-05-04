@@ -153,11 +153,7 @@ def pad(original_indices_list: list, pad_index: int, vocab2indx, maximum_length=
     """
     # TODO: implement your solution here 
     # CODE START
-    if len(original_indices_list) < maximum_length:
-        num_pad = maximum_length - len(original_indices_list)
-        for i in range(0, num_pad):
-            original_indices_list.append(vocab2indx["<PAD>"])
-    return original_indices_list
+    return original_indices_list + [pad_index for i in range(maximum_length - len(original_indices_list))]
 
 def convert_X(examples, vocab2indx, new_pad_entry):
     MAXIMUM_LENGTH = 300
