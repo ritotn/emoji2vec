@@ -217,8 +217,9 @@ class Phrase2VecRNN(nn.Module):
         vecs = torch.FloatTensor(embed_array_w_oov_pad)
         
         self.embeddings = nn.Embedding.from_pretrained(vecs, freeze=True)
-        self.rnn = nn.RNN(input_size=dim, hidden_size=300, num_layers=1)   
-        self.linear = nn.Linear(hidden_dim1, 1)
+        self.rnn = nn.RNN(input_size=dim, hidden_size=300, num_layers=1)  
+        self.dropout = nn.Dropout(0.001) 
+        self.linear = nn.Linear(hidden_dim1, 300)
 
 
     def __getitem__(self, item):
@@ -237,9 +238,10 @@ class Phrase2VecRNN(nn.Module):
         X_train = convert_X(tokens, self.vocab2indx, new_pad_entry)
 
         out = self.embeddings(X_train)
-        out, hidden = self.rnn(out)
+        out, _ = self.rnn(out)
+        out = self.dropout(out)
         out = self.linear(out)
-        #print(out.shape)
+        # print(out.shape)
 
         return out
 
