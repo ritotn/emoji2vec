@@ -99,12 +99,7 @@ class Phrase2Vec:
     def __setitem__(self, key, value):
         self.wordVecModel[key] = value
 
-
-
-
-# CODE FROM HW5
-
-def add_the_embedding(embed_array, vocab2indx, embedding_dim=300): 
+def add_the_embedding(embed_array, vocab2indx): 
     """
     Adds "the" embedding to the embed_array matrix
     """
@@ -127,50 +122,33 @@ def create_word_indices(tokens: List[str], vocab2indx: dict) -> List[int]:
     Returns: 
         - (List[int]): list of integers
     """ 
-    # TODO: implement your solution here 
-    # CODE START
-    result = []
-    for t in tokens:
-        if t in vocab2indx:
-            result.append(vocab2indx[t])
-        else: 
-            result.append(vocab2indx["<OOV>"])
-    return result
+    return [vocab2indx[token] if token in vocab2indx else vocab2indx["<OOV>"] for token in tokens]
 
 def truncate(original_indices_list: list, maximum_length=300) -> list: 
     """
     Truncates the original_indices_list to the maximum_length
     """
-    # TODO: implement your solution here 
-    # CODE START
     return original_indices_list[0:maximum_length]
-    # CODE END 
 
-def pad(original_indices_list: list, pad_index: int, vocab2indx, maximum_length=300) -> list: 
+def pad(original_indices_list: list, vocab2indx, maximum_length=300) -> list: 
     """
     Given original_indices_list, concatenates the pad_index enough times 
     to make the list to maximum_length. 
     """
-    # TODO: implement your solution here 
-    # CODE START
-    if len(original_indices_list) < maximum_length:
-        num_pad = maximum_length - len(original_indices_list)
-        for i in range(0, num_pad):
-            original_indices_list.append(vocab2indx["<PAD>"])
-    return original_indices_list
+    return original_indices_list + [vocab2indx["<PAD>"] for i in range(maximum_length - len(original_indices_list))]
 
-def convert_X(desc, vocab2indx, new_pad_entry):
+def convert_to_matrix(tokens, vocab2indx):
     MAXIMUM_LENGTH = 300
     
-    desc_indices = create_word_indices(desc, vocab2indx)
-    desc_indices = truncate(desc_indices, maximum_length=MAXIMUM_LENGTH)
-    desc_indices = pad(desc_indices, new_pad_entry, vocab2indx, maximum_length=MAXIMUM_LENGTH)
-        
-    X = torch.LongTensor(desc_indices)
-    return X
+    token_indices = create_word_indices(tokens, vocab2indx)
+    token_indices = truncate(token_indices, maximum_length=MAXIMUM_LENGTH)
+    token_indices = pad(token_indices, vocab2indx, maximum_length=MAXIMUM_LENGTH)
+
+    token_matrix = torch.LongTensor(token_indices)
+    return token_matrix
 
 class Phrase2VecRNN(nn.Module):
-    def __init__(self, dim, w2v_path, e2v_path=None, hidden_dim=300, num_layers=1, dropout_prob=0.1):
+    def __init__(self, dim, w2v_path, e2v_path=None, hidden_dim=300, num_layers=2, dropout_prob=0.1):
         """Constructor for the Phrase2Vec model
 
         Args:
@@ -237,15 +215,11 @@ class Phrase2VecRNN(nn.Module):
         return out, hidden
 
     def __getitem__(self, item):
-        new_pad_entry = len(self.idx2vocab)
         tokens = item.split(' ')
-        X = convert_X(tokens, self.vocab2indx, new_pad_entry)
-
-        out, hidden = self.forward(X)
-
+        token_matrix = convert_to_matrix(tokens, self.vocab2indx)
+        out, _ = self.forward(token_matrix)
         return out
         
-
     def from_emoji(self, emoji_vec, top_n=10):
         """Get the top n closest tokens for a supplied emoji vector
 
