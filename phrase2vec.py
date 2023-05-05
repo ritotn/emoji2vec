@@ -137,15 +137,14 @@ def pad(original_indices_list: list, vocab2indx, maximum_length=300) -> list:
     """
     return original_indices_list + [vocab2indx["<PAD>"] for i in range(maximum_length - len(original_indices_list))]
 
-def convert_to_matrix(tokens, vocab2indx):
+def convert_to_indices(tokens, vocab2indx):
     MAXIMUM_LENGTH = 300
     
     token_indices = create_word_indices(tokens, vocab2indx)
     token_indices = truncate(token_indices, maximum_length=MAXIMUM_LENGTH)
     token_indices = pad(token_indices, vocab2indx, maximum_length=MAXIMUM_LENGTH)
 
-    token_matrix = torch.LongTensor(token_indices)
-    return token_matrix
+    return torch.LongTensor(token_indices)
 
 class Phrase2VecRNN(nn.Module):
     def __init__(self, dim, w2v_path, e2v_path=None, hidden_dim=300, num_layers=2, dropout_prob=0.1):
@@ -191,7 +190,7 @@ class Phrase2VecRNN(nn.Module):
         embed_array_w_oov_pad = add_the_embedding(embed_array_w_oov, vocab2indx)
         vecs = torch.FloatTensor(embed_array_w_oov_pad)
 
-        self.embeddings = nn.Embedding.from_pretrained(vecs, freeze=False)
+        self.embeddings = nn.Embedding.from_pretrained(vecs, freeze=True)
         self.dropout = nn.Dropout(dropout_prob) 
         self.linear = nn.Linear(hidden_dim, 300)
 
@@ -216,8 +215,8 @@ class Phrase2VecRNN(nn.Module):
 
     def __getitem__(self, item):
         tokens = item.split(' ')
-        token_matrix = convert_to_matrix(tokens, self.vocab2indx)
-        out, _ = self.forward(token_matrix)
+        token_indices = convert_to_indices(tokens, self.vocab2indx)
+        out, _ = self.forward(token_indices)
         return out
         
     def from_emoji(self, emoji_vec, top_n=10):
