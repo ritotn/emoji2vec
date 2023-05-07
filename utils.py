@@ -12,7 +12,7 @@ from gensim import matutils
 from naga.shared.kb import KB
 
 # Internal dependencies
-from phrase2vec import Phrase2Vec, Phrase2VecAVG
+from phrase2vec import Phrase2Vec
 from phrase2vec_rnn import Phrase2VecRNN, Phrase2VecDAN
 
 # Authorship
@@ -92,6 +92,8 @@ def build_kb(data_folder):
     __read_data(data_folder + '/' + 'train.txt', base, ind_to_phr, ind_to_emoj, 'train')
     __read_data(data_folder + '/' + 'dev.txt', base, ind_to_phr, ind_to_emoj, 'dev')
     __read_data(data_folder + '/' + 'test.txt', base, ind_to_phr, ind_to_emoj, 'test')
+
+    print(ind_to_phr)
 
     return base, ind_to_phr, ind_to_emoj
 

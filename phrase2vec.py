@@ -56,10 +56,8 @@ class Phrase2Vec:
                              'https://code.google.com/archive/p/word2vec/ and unzip', w2v_path))
 
         w2v = gs.KeyedVectors.load_word2vec_format(w2v_path, binary=True)
-        print("here w2v")
         if e2v_path is not None:
             e2v = gs.KeyedVectors.load_word2vec_format(e2v_path, binary=True)
-            print("here e2v")
         else:
             e2v = dict()
         return cls(dim, w2v, e2v)
