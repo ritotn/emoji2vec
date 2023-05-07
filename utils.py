@@ -41,9 +41,8 @@ def generate_embeddings(ind2phr, kb, embeddings_file, word2vec_file, word2vec_di
     if not (os.path.isfile(embeddings_file)):
         print('reading embedding data from: ' + word2vec_file)
         #phrase_vec_model = Phrase2Vec.from_word2vec_paths(word2vec_dim, w2v_path=word2vec_file)
-        phrase_vec_model = Phrase2VecAVG.from_word2vec_paths(word2vec_dim, w2v_path=word2vec_file)
         #phrase_vec_model = Phrase2VecDAN(word2vec_dim, w2v_path=word2vec_file)
-        #phrase_vec_model = Phrase2VecRNN(word2vec_dim, w2v_path=word2vec_file)
+        phrase_vec_model = Phrase2VecRNN(word2vec_dim, w2v_path=word2vec_file)
 
         print('generating vector subset')
         for phrase in kb.get_vocab(1):

@@ -154,7 +154,7 @@ class Phrase2VecRNN(nn.Module):
 
 
 class Phrase2VecDAN(nn.Module):
-    def __init__(self, dim, w2v_path, e2v_path=None, hidden_dim1=300, hidden_dim2=300, output_dim=300, leaky_relu_slope=0.01, dropout_prob=0.1):
+    def __init__(self, dim, w2v_path, e2v_path=None, hidden_dim1=300, hidden_dim2=300, output_dim=300, leaky_relu_slope=0.01, dropout_prob=0.3):
         """Constructor for the Phrase2Vec model
 
         Args:
@@ -209,8 +209,8 @@ class Phrase2VecDAN(nn.Module):
         batch_size = x.size(0)
 
         embed = self.embeddings(x)
-        #out = self.dropout(embed)
         out = torch.mean(embed, 1)
+        out = self.dropout(out)
         out = self.model(out)
 
         return out
