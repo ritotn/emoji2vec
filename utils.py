@@ -12,7 +12,7 @@ from gensim import matutils
 from naga.shared.kb import KB
 
 # Internal dependencies
-from phrase2vec import Phrase2Vec
+from phrase2vec import Phrase2Vec, Phrase2VecAVG
 from phrase2vec_rnn import Phrase2VecRNN, Phrase2VecDAN
 
 # Authorship
@@ -41,8 +41,9 @@ def generate_embeddings(ind2phr, kb, embeddings_file, word2vec_file, word2vec_di
     if not (os.path.isfile(embeddings_file)):
         print('reading embedding data from: ' + word2vec_file)
         #phrase_vec_model = Phrase2Vec.from_word2vec_paths(word2vec_dim, w2v_path=word2vec_file)
+        phrase_vec_model = Phrase2VecAVG.from_word2vec_paths(word2vec_dim, w2v_path=word2vec_file)
         #phrase_vec_model = Phrase2VecDAN(word2vec_dim, w2v_path=word2vec_file)
-        phrase_vec_model = Phrase2VecRNN(word2vec_dim, w2v_path=word2vec_file)
+        #phrase_vec_model = Phrase2VecRNN(word2vec_dim, w2v_path=word2vec_file)
 
         print('generating vector subset')
         for phrase in kb.get_vocab(1):
@@ -57,7 +58,7 @@ def generate_embeddings(ind2phr, kb, embeddings_file, word2vec_file, word2vec_di
     embeddings_array = np.zeros(shape=[len(ind2phr), 300], dtype=np.float32)
     with torch.no_grad():
         for ind, phr in ind2phr.items():
-            embeddings_array[ind] = phrase_vector_sums[phr][0]
+            embeddings_array[ind] = phrase_vector_sums[phr]
 
     return embeddings_array
 
@@ -92,8 +93,6 @@ def build_kb(data_folder):
     __read_data(data_folder + '/' + 'train.txt', base, ind_to_phr, ind_to_emoj, 'train')
     __read_data(data_folder + '/' + 'dev.txt', base, ind_to_phr, ind_to_emoj, 'dev')
     __read_data(data_folder + '/' + 'test.txt', base, ind_to_phr, ind_to_emoj, 'test')
-
-    print(ind_to_phr)
 
     return base, ind_to_phr, ind_to_emoj
 
