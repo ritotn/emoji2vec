@@ -23,7 +23,7 @@ __email__ = "beisner@princeton.edu"
 class ModelParams:
     """Convenience class for passing around model parameters"""
 
-    def __init__(self, in_dim, out_dim, max_epochs, pos_ex, neg_ratio, learning_rate, dropout, class_threshold):
+    def __init__(self, in_dim, out_dim, max_epochs, pos_ex, neg_ratio, learning_rate, dropout, class_threshold, model):
         """Create a struct of all parameters that get fed into the model
 
         Args:
@@ -45,6 +45,7 @@ class ModelParams:
         self.out_dim = out_dim
         self.in_dim = in_dim
         self.mb = self.pos_ex * (1 + self.neg_ratio)
+        self.model = model
 
     def model_folder(self, dataset_name):
         """Get the model path for a given dataset

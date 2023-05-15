@@ -42,13 +42,15 @@ class CliParser:
         # Miscellaneous
         self.parser.add_argument('-ds', '--dataset', default='unicode', type=str, help='unicode or emojipedia')
         self.parser.add_argument('-D', '--debug', help='enable debugging')
-
+        self.parser.add_argument('-mod', '--model', default='avg', type=str,
+                                 help='model for training')
+        
         args = self.parser.parse_args()
 
         # dimensions of projected embeddings
         self.model_params = ModelParams(300, out_dim=args.dim, pos_ex=args.batch, max_epochs=args.epochs,
                                         neg_ratio=args.ratio, learning_rate=args.learning, dropout=args.dropout,
-                                        class_threshold=args.threshold)
+                                        class_threshold=args.threshold, model=args.model)
 
         # debug mode?
         self.debug = args.debug
@@ -85,6 +87,7 @@ class CliParser:
         print('epochs\t', self.model_params.max_epochs)
         print('learning\t', self.model_params.learning_rate)
         print('dropout\t', self.model_params.dropout)
+        print('model\t', self.model_params.model)
         print('dataset\t', self.dataset)
 
     def print_search_params(self, title, search_params):
