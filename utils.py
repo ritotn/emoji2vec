@@ -189,9 +189,11 @@ def get_metrics(pred_labels, pred_values, truth_labels, truth_values):
     """
     acc = metrics.accuracy_score(y_true=truth_labels, y_pred=pred_labels)
     f1 = metrics.f1_score(y_true=truth_labels, y_pred=pred_labels)
+    recall = metrics.recall_score(y_true=truth_labels, y_pred=pred_labels)
+    precision = metrics.precision_score(y_true=truth_labels, y_pred=pred_labels)
     try:
         auc = metrics.roc_auc_score(y_true=truth_values, y_score=pred_values)
     except:
         auc = 'N/A'
 
-    return acc, f1, auc
+    return acc, f1, auc, recall, precision

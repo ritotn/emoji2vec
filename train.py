@@ -144,14 +144,17 @@ def train_save_evaluate(params, kb, train_set, dev_set, ind2emoji, embeddings_ar
             pred_values = predictions[dset_name]['y_pred']
 
             # Calculate metrics
-            acc, f1, auc = get_metrics(pred_labels, pred_values, true_labels, true_values)
+            acc, f1, auc, recall, precision = get_metrics(pred_labels, pred_values, true_labels, true_values)
 
-            print(str.format('{}: Accuracy(>{}): {}, f1: {}, auc: {}', dset_name, params.class_threshold, acc, f1, auc))
+            print(str.format('{}: Accuracy(>{}): {}, f1: {}, auc: {}, recall: {}, precision: {}', dset_name, params.class_threshold, acc, f1, auc, recall, precision))
 
             results[dset_name] = {
                 'accuracy': acc,
                 'f1': f1,
-                'auc': auc
+                'auc': auc,
+                'recall': recall,
+                'precision': precision
+
             }
 
     return results['dev']
