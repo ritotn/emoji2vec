@@ -3,7 +3,8 @@
 # External dependencies
 import sklearn.manifold as man
 import matplotlib.pyplot as plt
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior()
 import pickle as pk
 
 # Internal dependencies
