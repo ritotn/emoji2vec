@@ -4,7 +4,7 @@
 import tweepy
 import pickle
 import os.path as path
-from sklearn import cross_validation
+from sklearn.model_selection import train_test_split
 import numpy as np
 import nltk.tokenize as tk
 import math

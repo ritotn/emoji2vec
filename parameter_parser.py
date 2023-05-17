@@ -45,7 +45,7 @@ class CliParser:
         self.parser.add_argument('-mod', '--model', default='avg', type=str,
                                  help='model for training')
         
-        args = self.parser.parse_args()
+        args, unknown = self.parser.parse_known_args()
 
         # dimensions of projected embeddings
         self.model_params = ModelParams(300, out_dim=args.dim, pos_ex=args.batch, max_epochs=args.epochs,

@@ -78,19 +78,19 @@ class Phrase2VecRNN(nn.Module):
             print(str.format('{} not found. Either provide a different path, or download binary from '
                                 'https://code.google.com/archive/p/word2vec/ and unzip', w2v_path))
 
-        wordVecModel = gs.KeyedVectors.load_word2vec_format(w2v_path, binary=True)
+        self.wordVecModel = gs.KeyedVectors.load_word2vec_format(w2v_path, binary=True)
 
         if e2v_path is not None:
             self.emojiVecModel = gs.KeyedVectors.load_word2vec_format(e2v_path, binary=True)
         else:
             self.emojiVecModel = dict()
 
-        vocab2indx = dict(wordVecModel.key_to_index)
-        idx2vocab = list(wordVecModel.index_to_key)
-        embed_array = wordVecModel.vectors
+        vocab2indx = dict(self.wordVecModel.key_to_index)
+        idx2vocab = list(self.wordVecModel.index_to_key)
+        embed_array = self.wordVecModel.vectors
         
         # add <OOV> symbol
-        new_oov_entry = len(wordVecModel)
+        new_oov_entry = len(self.wordVecModel)
         idx2vocab += ["<OOV>"]
         vocab2indx["<OOV>"] = new_oov_entry
         embed_array_w_oov = add_the_embedding(embed_array, vocab2indx)
@@ -167,19 +167,19 @@ class Phrase2VecDAN(nn.Module):
             print(str.format('{} not found. Either provide a different path, or download binary from '
                                 'https://code.google.com/archive/p/word2vec/ and unzip', w2v_path))
 
-        wordVecModel = gs.KeyedVectors.load_word2vec_format(w2v_path, binary=True)
+        self.wordVecModel = gs.KeyedVectors.load_word2vec_format(w2v_path, binary=True)
 
         if e2v_path is not None:
             self.emojiVecModel = gs.KeyedVectors.load_word2vec_format(e2v_path, binary=True)
         else:
             self.emojiVecModel = dict()
 
-        vocab2indx = dict(wordVecModel.key_to_index)
-        idx2vocab = list(wordVecModel.index_to_key)
-        embed_array = wordVecModel.vectors
+        vocab2indx = dict(self.wordVecModel.key_to_index)
+        idx2vocab = list(self.wordVecModel.index_to_key)
+        embed_array = self.wordVecModel.vectors
         
         # add <OOV> symbol
-        new_oov_entry = len(wordVecModel)
+        new_oov_entry = len(self.wordVecModel)
         idx2vocab += ["<OOV>"]
         vocab2indx["<OOV>"] = new_oov_entry
         embed_array_w_oov = add_the_embedding(embed_array, vocab2indx)
